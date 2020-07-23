@@ -1,0 +1,71 @@
+---
+title: "Developing Data Products - Week 3"
+author: "Matt"
+date: "7/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(plotly)
+library(forcats)
+library(readr)
+library(lubridate)
+library(tidyr)
+library(crosstalk)
+library(purrr)
+
+urlfile="https://raw.githubusercontent.com/Jamo-bot/Developing_Data_Products/Jamo-bot-patch-1/beer_data.csv"
+
+beer_data <- read_csv(url(urlfile))
+
+```
+
+
+## filter for top 10 styles 
+```{r data selected}
+
+beer_list <- beer_data %>% count(beer_type) %>%
+      arrange(desc(n)) %>%
+      top_n(10) %>%
+      select(beer_type) %>%
+      t()
+
+
+beer_top10 <- beer_data %>%
+      filter(beer_type  %in% beer_list)
+```
+
+## Create plots of style vs % ABV and IBUs
+```{r subplot}
+shared_beer <- beer_top10 %>%
+      filter(beer_ibu >= 1 ) %>%
+      SharedData$new(key = ~beer_type)
+
+sp1 <- shared_beer %>% 
+      plot_ly() %>%
+      count(beer_type) %>%
+      arrange(n) %>%
+      add_bars(x = ~beer_type, y = ~n, showlegend = FALSE) %>%
+      layout(barmode = "overlay")
+      
+sp2 <- shared_beer %>%
+  plot_ly(x = ~beer_abv, y = ~beer_ibu, hoverinfo = "text", text = ~paste("", beer_name, "<br>",
+                            "% ABV:", beer_abv, "<br>",
+                            "IBUs:", beer_ibu)) %>%
+  add_markers(color = ~rating_score) %>%
+      layout(xaxis = list(title = "Percent ABV"),
+          yaxis = list(title = "IBUs"))
+
+
+subplot(sp1, sp2, margin = 0.05) %>%
+      layout(
+     xaxis = list(title = ""), 
+     xaxis2 = list(title = "% ABV"),
+     yaxis = list(title = "Total beers"), 
+     yaxis2 = list(title = "IBUs"),
+     title = "Click the Bars"
+   )
+```

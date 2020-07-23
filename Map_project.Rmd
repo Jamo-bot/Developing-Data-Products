@@ -1,0 +1,39 @@
+---
+title: "map_project"
+author: "Matt"
+date: "7/14/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(leaflet)
+```
+
+
+
+## First Map
+```{r, echo = TRUE}
+
+beer_data <- read_csv("C:/Users/demon/OneDrive/Documents/GitHub/Developing data products/beer_data.csv")
+
+my_map <- leaflet() %>%
+      addTiles()
+
+
+beer_markers <- beer_data %>% 
+      select(lat = venue_lat, lng = venue_lng) %>%
+      drop_na()
+
+beer_markers %>%
+      leaflet() %>%
+      addTiles() %>%
+      addMarkers(clusterOptions = markerClusterOptions())
+```
+
